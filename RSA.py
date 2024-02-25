@@ -9,11 +9,11 @@ def generate_keypair(bit_length: int = 64):
     k = 2
 
     while not is_simple(p, k):
-        print(f'{p = }')
+        # print(f'{p = }')
         p = getrandbits(bit_length)
 
     while not is_simple(q, k) or q == p:
-        print(f'{q = }')
+        # print(f'{q = }')
         q = getrandbits(bit_length)
 
     n = p * q

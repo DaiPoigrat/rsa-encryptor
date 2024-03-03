@@ -18,16 +18,25 @@ class RSAEncryptor(CustomEncoding):
         self.public_key_path = 'files/public.txt'
         self.private_key_path = 'files/private.txt'
 
-    def generate_keypair(self, bit_length: int = 64):
+    def generate_keypair(self, bit_length: int = 12):
         p = 0
         q = 0
-        k = 2
+        k = 100
+
+        p = int(input('Введите простое число p: '))
+        q = int(input('Введите простое число q: '))
 
         while not is_simple(p, k):
-            p = getrandbits(bit_length)
+            p = int(input('Введите простое число p: '))
 
         while not is_simple(q, k) or q == p:
-            q = getrandbits(bit_length)
+            q = int(input('Введите простое число q: '))
+
+        # while not is_simple(p, k):
+        #     p = getrandbits(bit_length)
+        #
+        # while not is_simple(q, k) or q == p:
+        #     q = getrandbits(bit_length)
 
         n = p * q
         phi = (p - 1) * (q - 1)
@@ -74,10 +83,16 @@ class RSAEncryptor(CustomEncoding):
                 print(f'Нет текста для шифрования')
                 sys.exit()
 
+            print('открытый текст:')
+            print(text)
+
             filtered_text = ''
             for letter in text:
-                if letter in self._valid_characters:
-                    filtered_text += letter
+                if letter.lower() in self._valid_characters:
+                    filtered_text += letter.lower()
+
+            print('отфильтрованный текст:')
+            print(filtered_text)
 
         with open(self.public_key_path, 'r', encoding='utf-8') as file:
             try:
@@ -87,11 +102,15 @@ class RSAEncryptor(CustomEncoding):
                 n = int(n)
                 # записываем символы численным представлением
                 encrypted_text = ''.join([self.encode_char(char) for char in filtered_text])
+                print('кастомная кодировка:')
+                print(encrypted_text)
                 # выбираем чанки, чтобы были меньше n
                 chunks = self._create_chunks(input_string=encrypted_text, max_chunk_len=max_chunk_len, n=n)
-
+                print('деление на чанки:')
+                print(chunks)
                 encrypted_chunks = [str(pow(int(char), e, n)) for char in chunks]
-
+                print('зашифрованные чанки:')
+                print(encrypted_chunks)
 
             except Exception as e:
                 print(f'Ошибка чтения public key')
@@ -111,6 +130,9 @@ class RSAEncryptor(CustomEncoding):
                 print(f'Нет текста для дешифрования')
                 sys.exit()
 
+            print('текст для расшифрования:')
+            print(encrypted_text)
+
         with open(self.private_key_path, 'r', encoding='utf-8') as file:
             try:
                 d, n = file.readlines()
@@ -119,22 +141,27 @@ class RSAEncryptor(CustomEncoding):
                 n = int(n)
 
                 chunks = self._create_chunks(input_string=encrypted_text, max_chunk_len=max_chunk_len, n=n)
+                print('текст для расшифрования разбили на чанки:')
+                print(chunks)
                 decrypted_chunks = [str(pow(int(char), d, n)) for char in chunks]
+                print('расшифровали чанки:')
+                print(decrypted_chunks)
 
-                prepared_chunks = []
-                for chunk in decrypted_chunks[:len(decrypted_chunks) - 1]:
-                    if len(chunk) < max_chunk_len:
-                        prepared_chunks.append(chunk)
-                        continue
-                    prepared_chunks.append(chunk)
+                # prepared_chunks = []
+                # for chunk in decrypted_chunks[:len(decrypted_chunks) - 1]:
+                #     if len(chunk) < max_chunk_len:
+                #         prepared_chunks.append(chunk)
+                #         continue
+                #     prepared_chunks.append(chunk)
+                #
+                # prepared_chunks.append(decrypted_chunks[-1])
 
-                prepared_chunks.append(decrypted_chunks[-1])
-
-                prepared_text = ''.join(prepared_chunks)
+                prepared_text = ''.join(decrypted_chunks)
                 decrypted_text = self.decode_string(input_text=prepared_text)
 
             except Exception as e:
                 print(f'Ошибка чтения pivate key')
+                print(e)
                 sys.exit()
 
         with open(self.decrypted_text_path, 'w', encoding='utf-8') as file:

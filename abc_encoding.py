@@ -7,11 +7,11 @@ from random import randint
 
 class CustomEncoding:
     def __init__(self):
-        self._ru_abc = 'абвгдеёжизийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
+        self._ru_abc = 'абвгдеёжизийклмнопрстуфхцчшщъыьэюя'
         self._numbers = string.digits
         self._punctuation_marks = string.punctuation
 
-        self._valid_characters = self._ru_abc + self._numbers + self._punctuation_marks + ' \n\t'
+        self._valid_characters = self._ru_abc + self._numbers + ',.!?-' + ' \n\t'
 
         self._encoding_object = encoding_object
         if not self._encoding_object:

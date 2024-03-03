@@ -4,7 +4,7 @@ import sys
 from ss_test import is_simple
 from abc_encoding import CustomEncoding
 
-from random import getrandbits, randrange
+from random import randrange
 from math import gcd
 
 
@@ -19,8 +19,6 @@ class RSAEncryptor(CustomEncoding):
         self.private_key_path = 'files/private.txt'
 
     def generate_keypair(self, bit_length: int = 12):
-        p = 0
-        q = 0
         k = 100
 
         p = int(input('Введите простое число p: '))
@@ -31,12 +29,6 @@ class RSAEncryptor(CustomEncoding):
 
         while not is_simple(q, k) or q == p:
             q = int(input('Введите простое число q: '))
-
-        # while not is_simple(p, k):
-        #     p = getrandbits(bit_length)
-        #
-        # while not is_simple(q, k) or q == p:
-        #     q = getrandbits(bit_length)
 
         n = p * q
         phi = (p - 1) * (q - 1)
@@ -57,15 +49,18 @@ class RSAEncryptor(CustomEncoding):
             print(f'Private key: {key_pair}')
             file.writelines(key_pair)
 
-    def _create_chunks(self, input_string, max_chunk_len, n: int) -> list:
+    @staticmethod
+    def _create_chunks(input_string, n: int) -> list:
         chunks = []
         current_chunk = ''
+
+        chunk_length = len(str(n))
 
         for index, char in enumerate(input_string):
             current_chunk += char
             current_chunk_value = int(current_chunk)
 
-            if current_chunk_value >= n:
+            if current_chunk_value >= n or len(current_chunk) > chunk_length:
                 chunks.append(current_chunk[:len(current_chunk) - 1])
                 current_chunk = char
 
@@ -98,17 +93,17 @@ class RSAEncryptor(CustomEncoding):
             try:
                 e, n = file.readlines()
                 e = int(e)
-                max_chunk_len = len(n)
+                chunk_length = len(n)
                 n = int(n)
                 # записываем символы численным представлением
                 encrypted_text = ''.join([self.encode_char(char) for char in filtered_text])
                 print('кастомная кодировка:')
                 print(encrypted_text)
                 # выбираем чанки, чтобы были меньше n
-                chunks = self._create_chunks(input_string=encrypted_text, max_chunk_len=max_chunk_len, n=n)
+                chunks = self._create_chunks(input_string=encrypted_text, n=n)
                 print('деление на чанки:')
                 print(chunks)
-                encrypted_chunks = [str(pow(int(char), e, n)) for char in chunks]
+                encrypted_chunks = [str(pow(int(char), e, n)).zfill(chunk_length) for char in chunks]
                 print('зашифрованные чанки:')
                 print(encrypted_chunks)
 
@@ -118,12 +113,12 @@ class RSAEncryptor(CustomEncoding):
 
         with open(self.encrypted_text_path, 'w', encoding='utf-8') as file:
             file.write(''.join(encrypted_chunks))
+            print(f'Зашифрованный текст')
+            print(''.join(encrypted_chunks))
 
     def decrypt(self):
         with open(self.encrypted_text_path, 'r', encoding='utf-8') as file:
             encrypted_text = file.read()
-
-            # encrypted_text = [int(char) for char in encrypted_text]
 
             if not encrypted_text:
                 # no encrypted_text.txt message
@@ -137,25 +132,14 @@ class RSAEncryptor(CustomEncoding):
             try:
                 d, n = file.readlines()
                 d = int(d)
-                max_chunk_len = len(n)
                 n = int(n)
 
-                chunks = self._create_chunks(input_string=encrypted_text, max_chunk_len=max_chunk_len, n=n)
+                chunks = self._create_chunks(input_string=encrypted_text, n=n)
                 print('текст для расшифрования разбили на чанки:')
                 print(chunks)
                 decrypted_chunks = [str(pow(int(char), d, n)) for char in chunks]
                 print('расшифровали чанки:')
                 print(decrypted_chunks)
-
-                # prepared_chunks = []
-                # for chunk in decrypted_chunks[:len(decrypted_chunks) - 1]:
-                #     if len(chunk) < max_chunk_len:
-                #         prepared_chunks.append(chunk)
-                #         continue
-                #     prepared_chunks.append(chunk)
-                #
-                # prepared_chunks.append(decrypted_chunks[-1])
-
                 prepared_text = ''.join(decrypted_chunks)
                 decrypted_text = self.decode_string(input_text=prepared_text)
 
@@ -176,6 +160,5 @@ class RSAEncryptor(CustomEncoding):
 
 if __name__ == '__main__':
     obj = RSAEncryptor()
-    # obj.generate_keypair(bit_length=10)
     obj.encrypt()
     obj.decrypt()
